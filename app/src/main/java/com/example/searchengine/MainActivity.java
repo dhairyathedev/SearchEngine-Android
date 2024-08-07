@@ -1,6 +1,7 @@
 package com.example.searchengine;
 
 import android.os.Bundle;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,6 +15,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.facebook.shimmer.ShimmerFrameLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private SearchResultAdapter adapter;
     private List<SearchResult> searchResults;
     private RequestQueue requestQueue;
+    private ShimmerFrameLayout shimmerFrameLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         searchEditText = findViewById(R.id.searchEditText);
         Button searchButton = findViewById(R.id.searchButton);
         resultsRecyclerView = findViewById(R.id.resultsRecyclerView);
+        shimmerFrameLayout = findViewById(R.id.shimmerFrameLayout);
 
         searchResults = new ArrayList<>();
         adapter = new SearchResultAdapter(searchResults);
@@ -63,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        showShimmerEffect();
+
         String url = "https://flask-app-vercel-phi.vercel.app/?q=" + query;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -80,9 +86,25 @@ public class MainActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         Toast.makeText(MainActivity.this, "Error parsing JSON", Toast.LENGTH_SHORT).show();
                     }
+                    hideShimmerEffect();
                 },
-                error -> Toast.makeText(MainActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show());
+                error -> {
+                    Toast.makeText(MainActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    hideShimmerEffect();
+                });
 
         requestQueue.add(jsonArrayRequest);
+    }
+
+    private void showShimmerEffect() {
+        resultsRecyclerView.setVisibility(View.GONE);
+        shimmerFrameLayout.setVisibility(View.VISIBLE);
+        shimmerFrameLayout.startShimmer();
+    }
+
+    private void hideShimmerEffect() {
+        shimmerFrameLayout.stopShimmer();
+        shimmerFrameLayout.setVisibility(View.GONE);
+        resultsRecyclerView.setVisibility(View.VISIBLE);
     }
 }
